@@ -10,9 +10,31 @@ package_name= "com.UnityTechnologies.com.unity.template.urpblank"
 
 file_changed_time=None
 
+def list_files(path):
+    try:
+        return set(f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)))
+    except Exception as e:
+        print(f"Error: {e}")
+        return set()
 
 def get_mtime(path):
     return os.path.getmtime(path)
+
+
+
+def find_apks_in_build_folder(build_folder_path):
+    apk_files = []
+    for root, dirs, files in os.walk(build_folder_path):
+        for file in files:
+            if file.endswith(".apk"):
+                apk_files.append(os.path.join(root, file))
+    return apk_files
+
+def list_connected_devices():
+                result = os.popen(f"{adb_path} devices").read()
+                lines = result.strip().split('\n')
+                devices = [line.split()[0] for line in lines[1:] if 'device' in line]
+                return devices
 
 while True:
 
@@ -26,14 +48,7 @@ while True:
     
 
 
-    path_namespace_apk_to_install = os.path.join(os.path.dirname(python_path), "set_apk_namespace.txt")
-    if not os.path.exists(path_namespace_apk_to_install):
-        with open(path_namespace_apk_to_install, "w") as f:
-            f.write("com.UnityTechnologies.com.unity.template.urpblank")
-
-    with open(path_namespace_apk_to_install) as f:
-        package_name = f.read().strip()
-        print("Package name:", package_name)
+    
 
 
 
@@ -50,20 +65,6 @@ while True:
         os.makedirs(string_build_folder)
 
 
-    def find_apks_in_build_folder(build_folder_path):
-        apk_files = []
-        for root, dirs, files in os.walk(build_folder_path):
-            for file in files:
-                if file.endswith(".apk"):
-                    apk_files.append(os.path.join(root, file))
-        return apk_files
-
-    apk_files = find_apks_in_build_folder(string_path_script_root)
-    string_path_of_apk = apk_files[0]
-    for apk in apk_files:
-        string_path_of_apk=apk
-        print(apk)
-
 
     # if os.path.exists(aapt_path):
     #     package_name_previous=package_name
@@ -74,30 +75,71 @@ while True:
     #         package_name = result.split("name='")[1].split("'")[0]
     #         print("Package name found:", package_name)
         
-<<<<<<< HEAD
-    while True:
 
-=======
-
-
+    previous_list_files = None
+    known_files = list_files(string_build_folder)
+    print("Monitoring for new files...\n")
 
     while True:
+        bool_new_files = False
+        current_files = list_files(string_build_folder)
+
+        if current_files == None or len(current_files) == 0:
+            print("No files found.")
+            time.sleep(5)
+            continue
+
+        if previous_list_files is None:
+            # First run
+            bool_new_files = True
+            previous_list_files = current_files
+            print("Initial files:")
+            for file in current_files:
+                print(f"- {file}")
+        else:
+            # Check for new files
+            new_files = current_files - previous_list_files
+            if new_files:
+                bool_new_files = True
+                print("New file(s) detected:")
+                for f in new_files:
+                    print(f"+ {f}")
+                previous_list_files = current_files
+
+        if not bool_new_files:
+            print("No new files.")
+
+        
+
+        if bool_new_files:
+
+            path_namespace_apk_to_install = os.path.join(os.path.dirname(python_path), "build/set_apk_namespace.txt")
+            if not os.path.exists(path_namespace_apk_to_install):
+                with open(path_namespace_apk_to_install, "w") as f:
+                    f.write("com.UnityTechnologies.com.unity.template.urpblank")
 
 
+            with open(path_namespace_apk_to_install) as f:
+                package_name = f.read().strip()
+                print("Package name:", package_name)
 
->>>>>>> 3b1145ee7c1afbec35e38e8cca13c20eeafa77f7
-        if file_changed_time == None or get_mtime(string_path_of_apk)!= file_changed_time:
-            file_changed_time = get_mtime(string_path_of_apk)
+            apk_files = find_apks_in_build_folder(string_path_script_root)
 
-            def list_connected_devices():
-                result = os.popen(f"{adb_path} devices").read()
-                lines = result.strip().split('\n')
-                devices = [line.split()[0] for line in lines[1:] if 'device' in line]
-                return devices
+            string_path_of_apk = apk_files[0]
+            for apk in apk_files:
+                string_path_of_apk=apk
+                print(apk)
+
+            if ".apk" in string_path_of_apk:
+                parts = string_path_of_apk.replace(".apk", "").strip().split(os.sep)
+                if len(parts) > 1 and "." in parts[-1]:
+                    package_name = parts[-1]
+                else:
+                    package_name = string_path_of_apk.split("/")[-1].split("\\")[-1].replace(".apk", "")
+
 
             connected_devices = list_connected_devices()
             print("Connected devices:", connected_devices)
-
             def uninstall_apk_on_device(device_id, package_name):
                 return f"{adb_path} -s {device_id} uninstall {package_name}\n"
 
