@@ -1,4 +1,9 @@
 
+```
+git clone https://github.com/EloiStree/2025_01_12_pyhton_build_run_apk_broadcaster.git toolbox
+```
+
+
 # 2025_01_12_BuildAndRunApkBroadcast  
 
 This script enables broadcasting the installation of an APK to all Android devices connected to the computer. It's ideal for multiplayer setups and Quest 3 development with Unity3D.  
